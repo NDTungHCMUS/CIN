@@ -19,7 +19,7 @@ def main():
     name = str("CIN")
 
     # Read config
-    yml_path = '.../codes/options/opt.yml'
+    yml_path = '../codes/options/opt.yml'
     option_yml = parse_yml(yml_path)
 
     # convert to NoneDict, which returns None for missing keys

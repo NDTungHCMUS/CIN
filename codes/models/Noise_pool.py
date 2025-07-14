@@ -10,6 +10,9 @@ from models.modules.Noise_option.gaussianBlur import GaussianBlur
 from models.modules.Noise_option.dropout import Dropout
 from models.modules.Noise_option.colorjitter import ColorJitter
 from models.modules.Noise_option.jpeg import Jpeg, JpegTest
+from models.modules.Noise_option.gauss_EditGuard import GaussianNoiseEditGuard
+from models.modules.Noise_option.jpeg_EditGuard import DiffJPEG
+from models.modules.Noise_option.poisson_EditGuard import PoissonNoise
 import kornia
 import random
 
@@ -65,6 +68,12 @@ class Noise_pool(nn.Module):
         #
         self.Cropout = Cropout(opt)
         self.Dropout = Dropout(opt)
+        self.GaussianNoiseEditGuard = GaussianNoiseEditGuard(opt, device)
+        self.DiffJPEG = DiffJPEG(
+            differentiable=True,
+            quality=opt["DiffJPEG"],
+        )
+        self.PoissonNoise = PoissonNoise(opt, device)
 
     def forward(self, encoded, cover_img, noise_choice):
         if noise_choice == "Superposition":
@@ -100,6 +109,9 @@ class Noise_pool(nn.Module):
             "GaussianBlur": self.GaussianBlur,
             "Salt_Pepper": self.Salt_Pepper,
             "GaussianNoise": self.GaussianNoise,
+            "GaussianNoiseEditGuard": self.GaussianNoiseEditGuard,
+            "DiffJPEG": self.DiffJPEG,
+            "PoissonNoise": self.PoissonNoise,
             "Brightness": self.Brightness,
             "Contrast": self.Contrast,
             "Saturation": self.Saturation,

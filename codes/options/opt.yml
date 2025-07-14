@@ -11,14 +11,14 @@ train:
   manual_seed: 
   device_ids: [0]
   os_environ: '0'
-  batch_size: 32
+  batch_size: 1
   num_workers: 16
   epoch: 50
   set_start_epoch: 1
   start_step: 1
   # log
   logs_per_step: 20
-  logTest_per_step: 5
+  logTest_per_step: 1
   # step
   val:
     per_epoch: 5
@@ -71,14 +71,15 @@ loss:
     TyptRecMsg: 'mse'  # mse \ bce \ bce_logits
     TyprEncoded: 'l2'  #  l1 \ l2
 
-
+noisesigma: 5
+DiffJPEG: 70
 #
 noise:
   #
   StrengthFactor:
     S: 1
   #
-  option:   'Identity'
+  option:   'DiffJPEG'
   #
   Identity:
   #
@@ -102,7 +103,7 @@ noise:
   #
   Jpeg:
     Q: 50
-    subsample: 2
+    subsample: 1
   #
   JpegTest:
     Q: 50
@@ -156,9 +157,10 @@ path:
 
   # coco2017
   train_folder:       '.../coco2017/train/train_class'
-  test_folder:        '.../coco2017/val/val_class'
+  # test_folder:        '../../test-128'
+  test_folder:        '../../valAGE-Set-128'
   #
-  resume_state_1pth:  '.../pth/cinNet&nsmNet.pth'
+  resume_state_1pth:  '../pth/cinNet&nsmNet.pth'
 
 
 

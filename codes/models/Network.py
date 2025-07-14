@@ -262,11 +262,137 @@ class Network(nn.Module):
         logging.info('--------------------------------------------------------\n')
 
 
+    # def test(self, test_data, current_epoch):  
+    #     #
+    #     logging.info('--------------------------------------------------------\n')
+    #     logging.info('##### test only #####\n')
+    #     self.current_epoch = current_epoch
+
+
+    #     log_file = os.path.join(self.log_folder, f'test_results_epoch_{current_epoch}.txt')
+    
+    #     # Write header to log file
+    #         with open(log_file, 'w') as f:
+    #         f.write(f"Test Results - Epoch {current_epoch}\n")
+    #         f.write("="*80 + "\n")
+    #         f.write("Image_ID, PSNR_WM2CO, PSNR_NO2CO, PSNR_REC2CO, PSNR_WM2NO, SSIM_WM2CO, SSIM_REC2CO, BER, ACC, BitWise_AvgErr1, BitWise_AvgErr2, Noise_Type\n")
+    #         f.write("-"*80 + "\n")
+
+    #     #
+    #     with torch.no_grad():
+    #         #
+    #         self.cinNet.eval()
+    #         test_step = 0 
+    #         total_steps = len(test_data)
+    #         #
+    #         psnr_wm2no_mean = 0  
+    #         psnr_wm2co_mean = 0
+    #         psnr_rec2co_mean = 0
+    #         psnr_no2co_mean = 0
+    #         BER_mean = 0
+    #         ssim_wm2co_mean = 0
+    #         ssim_rec2co_mean = 0
+
+    #         total_images = 0
+
+    #         # 
+    #         for _, image in enumerate(test_data):  
+    #             #
+    #             if (test_step*self.opt['train']['batch_size']) >= self.opt['datasets']['test']['num']:
+    #                 break
+    #             #
+    #             image = image.to(self.device)
+    #             batch_size = image.shape[0]
+
+    #             # msg
+    #             if self.opt['datasets']['msg']['mod_a']:     # msg in [0, 1]
+    #                 message = torch.Tensor(np.random.choice([0, 1], (image.shape[0], self.opt['network']['message_length']))).to(self.device)
+    #             elif self.opt['datasets']['msg']['mod_b']:   # msg in [-1, 1]
+    #                 message = torch.Tensor(np.random.choice([0, 1], (image.shape[0], self.opt['network']['message_length']))).to(self.device)
+    #                 message = message * 2 - 1
+    #             else:
+    #                 print('input message error, exit!')
+    #                 exit()
+
+    #             # fix noise-layer each batch
+    #             if self.opt['noise']['option'] == 'Combined':
+    #                 NoiseName = self.opt['noise']['Combined']['names']
+    #                 noise_choice = random.choice(NoiseName)   
+    #             else:
+    #                 noise_choice = self.opt['noise']['option']
+    #             # cinNet
+    #             watermarking_img, noised_img, img_fake, msg_fake_1, msg_fake_2, msg_nsm = \
+    #                 self.cinNet(image, message, noise_choice, False)
+    #             # psnr ssim acc
+    #             psnr_wm2co,psnr_no2co,psnr_rec2co,psnr_wm2no,ssim_wm2co,ssim_rec2co,acc1,BitWise_AvgErr1,\
+    #                 acc2,BitWise_AvgErr2 = self.psnr_ssim_acc(image, watermarking_img,noised_img,img_fake,msg_fake_1,msg_fake_2,message)
+
+    #             # mean
+    #             psnr_wm2no_mean = psnr_wm2no_mean + psnr_wm2no
+    #             psnr_wm2co_mean = psnr_wm2co_mean + psnr_wm2co
+    #             psnr_rec2co_mean = psnr_rec2co_mean + psnr_rec2co
+    #             psnr_no2co_mean = psnr_no2co_mean + psnr_no2co
+    #             #
+    #             ssim_wm2co_mean = ssim_wm2co.item() + ssim_wm2co_mean
+    #             ssim_rec2co_mean = ssim_rec2co.item() + ssim_rec2co_mean
+    #             #
+    #             _, ber = utils.bitWise_accurary(msg_nsm, message, self.opt)
+    #             BER_mean = BER_mean + ber
+
+    #             # loggging
+    #             if  test_step % self.opt["train"]['logTest_per_step'] == 0:
+    #                 utils.log_info_test(test_step, total_steps, self.Lr_current, psnr_wm2co, psnr_no2co, psnr_rec2co, psnr_wm2no,\
+    #                     ssim_wm2co, ssim_rec2co, BitWise_AvgErr1, BitWise_AvgErr2, noise_choice)
+                
+    #             # save images
+    #             if  test_step % self.opt["train"]['saveTestImgs_per_step'] == 0:
+    #                 utils.mkdir(self.img_w_folder_test)
+    #                 utils.save_images(image, watermarking_img, noised_img, img_fake, self.current_epoch, test_step, self.img_w_folder_test, self.time_now_NewExperiment, self.opt, resize_to=None)
+    #             #
+    #             test_step += 1
+
+    #         # logging mean 
+    #         logging.info('\n\
+    #                         psnr_no2co_mean = {}\n\
+    #                         psnr_rec2co_mean = {}\n\
+    #                         psnr_wm2no_mean = {}\n\
+    #                         psnr_wm2co_mean = {}\n \
+    #                         ------------------------\n\
+    #                         BER_ave = {}\n\
+    #                         ACC_ave = {}\n\
+    #                         ------------------------\n\
+    #                         ssim_wm2co_mean = {}\n\
+    #                         ssim_rec2co_mean = {}'\
+    #                 .format(psnr_no2co_mean.item()/test_step, \
+    #                         psnr_rec2co_mean.item()/test_step, \
+    #                         psnr_wm2no_mean.item()/test_step, \
+    #                         psnr_wm2co_mean.item()/test_step, \
+    #                         #------------------------
+    #                         BER_mean/test_step, \
+    #                         (1-BER_mean/test_step)*100, \
+    #                         #------------------------
+    #                         ssim_wm2co_mean/test_step, \
+    #                         ssim_rec2co_mean/test_step))
+    #     # test 1 epoch
+    #     logging.info('--------------------------------------------------------\n')
+    #     logging.info('Test end !')
+
     def test(self, test_data, current_epoch):  
-        #
+    #
         logging.info('--------------------------------------------------------\n')
         logging.info('##### test only #####\n')
         self.current_epoch = current_epoch
+        
+        # Create log file for individual image results
+        log_file = os.path.join(self.log_folder, f'test_results_epoch_{current_epoch}.txt')
+        
+        # Write header to log file
+        with open(log_file, 'w') as f:
+            f.write(f"Test Results - Epoch {current_epoch}\n")
+            f.write("="*80 + "\n")
+            f.write("Image_ID, PSNR_WM2CO, PSNR_NO2CO, PSNR_REC2CO, PSNR_WM2NO, SSIM_WM2CO, SSIM_REC2CO, BER, ACC, BitWise_AvgErr1, BitWise_AvgErr2, Noise_Type\n")
+            f.write("-"*80 + "\n")
+        
         #
         with torch.no_grad():
             #
@@ -281,6 +407,9 @@ class Network(nn.Module):
             BER_mean = 0
             ssim_wm2co_mean = 0
             ssim_rec2co_mean = 0
+            
+            total_images = 0
+            
             # 
             for _, image in enumerate(test_data):  
                 #
@@ -288,6 +417,8 @@ class Network(nn.Module):
                     break
                 #
                 image = image.to(self.device)
+                batch_size = image.shape[0]
+                
                 # msg
                 if self.opt['datasets']['msg']['mod_a']:     # msg in [0, 1]
                     message = torch.Tensor(np.random.choice([0, 1], (image.shape[0], self.opt['network']['message_length']))).to(self.device)
@@ -307,35 +438,125 @@ class Network(nn.Module):
                 # cinNet
                 watermarking_img, noised_img, img_fake, msg_fake_1, msg_fake_2, msg_nsm = \
                     self.cinNet(image, message, noise_choice, False)
-                # psnr ssim acc
-                psnr_wm2co,psnr_no2co,psnr_rec2co,psnr_wm2no,ssim_wm2co,ssim_rec2co,acc1,BitWise_AvgErr1,\
-                    acc2,BitWise_AvgErr2 = self.psnr_ssim_acc(image, watermarking_img,noised_img,img_fake,msg_fake_1,msg_fake_2,message)
-
-                # mean
-                psnr_wm2no_mean = psnr_wm2no_mean + psnr_wm2no
-                psnr_wm2co_mean = psnr_wm2co_mean + psnr_wm2co
-                psnr_rec2co_mean = psnr_rec2co_mean + psnr_rec2co
-                psnr_no2co_mean = psnr_no2co_mean + psnr_no2co
-                #
-                ssim_wm2co_mean = ssim_wm2co.item() + ssim_wm2co_mean
-                ssim_rec2co_mean = ssim_rec2co.item() + ssim_rec2co_mean
-                #
-                _, ber = utils.bitWise_accurary(msg_nsm, message, self.opt)
-                BER_mean = BER_mean + ber
-
-                # loggging
-                if  test_step % self.opt["train"]['logTest_per_step'] == 0:
-                    utils.log_info_test(test_step, total_steps, self.Lr_current, psnr_wm2co, psnr_no2co, psnr_rec2co, psnr_wm2no,\
-                        ssim_wm2co, ssim_rec2co, BitWise_AvgErr1, BitWise_AvgErr2, noise_choice)
                 
-                # save images
-                if  test_step % self.opt["train"]['saveTestImgs_per_step'] == 0:
-                    utils.mkdir(self.img_w_folder_test)
-                    utils.save_images(image, watermarking_img, noised_img, img_fake, self.current_epoch, test_step, self.img_w_folder_test, self.time_now_NewExperiment, self.opt, resize_to=None)
-                #
+                # Process each image in the batch individually
+                for i in range(batch_size):
+                    image_idx = total_images + i
+                    
+                    # Extract individual images and messages
+                    single_image = image[i:i+1]
+                    single_watermarking_img = watermarking_img[i:i+1]
+                    single_noised_img = noised_img[i:i+1]
+                    single_img_fake = img_fake[i:i+1]
+                    single_msg_fake_1 = msg_fake_1[i:i+1] if msg_fake_1 is not None else None
+                    single_msg_fake_2 = msg_fake_2[i:i+1] if msg_fake_2 is not None else None
+                    single_msg_nsm = msg_nsm[i:i+1] if msg_nsm is not None else None
+                    single_message = message[i:i+1] 
+                    
+                    # Calculate metrics for this single image
+                    psnr_wm2co, psnr_no2co, psnr_rec2co, psnr_wm2no, ssim_wm2co, ssim_rec2co, acc1, BitWise_AvgErr1, acc2, BitWise_AvgErr2 = \
+                        self.psnr_ssim_acc(single_image, single_watermarking_img, single_noised_img, single_img_fake, single_msg_fake_1, single_msg_fake_2, single_message)
+                    
+                    # Calculate BER for this single image
+                    _, ber = utils.bitWise_accurary(single_msg_nsm, single_message, self.opt)
+                    acc = 1 - ber
+                    
+                    # Log individual image results
+                    log_entry = f"{image_idx:04d}, {psnr_wm2co.item():.6f}, {psnr_no2co.item():.6f}, {psnr_rec2co.item():.6f}, {psnr_wm2no.item():.6f}, {ssim_wm2co.item():.6f}, {ssim_rec2co.item():.6f}, {ber:.6f}, {acc:.6f}"
+                    
+                    if BitWise_AvgErr1 is not None:
+                        log_entry += f", {BitWise_AvgErr1:.6f}"
+                    else:
+                        log_entry += ", N/A"
+                    
+                    if BitWise_AvgErr2 is not None:
+                        log_entry += f", {BitWise_AvgErr2:.6f}"
+                    else:
+                        log_entry += ", N/A"
+                    
+                    log_entry += f", {noise_choice}\n"
+                    
+                    # Write to log file
+                    with open(log_file, 'a') as f:
+                        f.write(log_entry)
+                    
+                    # Print to console for immediate feedback (each image)
+                    print(f"Image {image_idx:04d}: PSNR_WM2CO={psnr_wm2co.item():.6f}, PSNR_NO2CO={psnr_no2co.item():.6f}, PSNR_REC2CO={psnr_rec2co.item():.6f}, PSNR_WM2NO={psnr_wm2no.item():.6f}, SSIM_WM2CO={ssim_wm2co.item():.6f}, SSIM_REC2CO={ssim_rec2co.item():.6f}, BER={ber:.6f}, ACC={acc:.6f}, Noise={noise_choice}")
+                    
+                    # Accumulate metrics for each individual image
+                    psnr_wm2no_mean += psnr_wm2no.item()
+                    psnr_wm2co_mean += psnr_wm2co.item()
+                    psnr_rec2co_mean += psnr_rec2co.item()
+                    psnr_no2co_mean += psnr_no2co.item()
+                    ssim_wm2co_mean += ssim_wm2co.item()
+                    ssim_rec2co_mean += ssim_rec2co.item()
+                    BER_mean += ber
+                    
+                    # Save individual image if needed
+                    if image_idx % self.opt["train"]['saveTestImgs_per_step'] == 0:
+                        utils.mkdir(self.img_w_folder_test)
+                        utils.save_images(single_image, single_watermarking_img, single_noised_img, single_img_fake, 
+                                        self.current_epoch, image_idx, self.img_w_folder_test, self.time_now_NewExperiment, self.opt, resize_to=None)
+                    
+                    # Update total images count
+                    total_images += 1
+                    
+                    # Print running averages every 10 images
+                    if total_images % 10 == 0:
+                        print(f"--- Running Average (after {total_images} images) ---")
+                        print(f"Avg PSNR_WM2CO: {psnr_wm2co_mean/total_images:.6f}")
+                        print(f"Avg PSNR_NO2CO: {psnr_no2co_mean/total_images:.6f}")
+                        print(f"Avg PSNR_REC2CO: {psnr_rec2co_mean/total_images:.6f}")
+                        print(f"Avg PSNR_WM2NO: {psnr_wm2no_mean/total_images:.6f}")
+                        print(f"Avg BER: {BER_mean/total_images:.6f}")
+                        print(f"Avg ACC: {(1-BER_mean/total_images)*100:.2f}%")
+                        print(f"Avg SSIM_WM2CO: {ssim_wm2co_mean/total_images:.6f}")
+                        print(f"Avg SSIM_REC2CO: {ssim_rec2co_mean/total_images:.6f}")
+                        print("-" * 50)
+                
+                # Log batch progress (for compatibility with existing logging)
+                if test_step % self.opt["train"]['logTest_per_step'] == 0:
+                    # Use batch-level metrics for progress logging
+                    batch_psnr_wm2co, batch_psnr_no2co, batch_psnr_rec2co, batch_psnr_wm2no, batch_ssim_wm2co, batch_ssim_rec2co, batch_acc1, batch_BitWise_AvgErr1, batch_acc2, batch_BitWise_AvgErr2 = \
+                        self.psnr_ssim_acc(image, watermarking_img, noised_img, img_fake, msg_fake_1, msg_fake_2, message)
+                    
+                    utils.log_info_test(test_step, total_steps, self.Lr_current, batch_psnr_wm2co, batch_psnr_no2co, batch_psnr_rec2co, batch_psnr_wm2no,
+                        batch_ssim_wm2co, batch_ssim_rec2co, batch_BitWise_AvgErr1, batch_BitWise_AvgErr2, noise_choice)
+                
                 test_step += 1
 
-            # logging mean 
+            # Write average results to log file
+            with open(log_file, 'a') as f:
+                f.write("\n" + "="*80 + "\n")
+                f.write("FINAL AVERAGE RESULTS:\n")
+                f.write("-"*80 + "\n")
+                f.write(f"Total Images Processed: {total_images}\n")
+                f.write(f"Average PSNR_NO2CO: {psnr_no2co_mean/total_images:.6f}\n")
+                f.write(f"Average PSNR_REC2CO: {psnr_rec2co_mean/total_images:.6f}\n")
+                f.write(f"Average PSNR_WM2NO: {psnr_wm2no_mean/total_images:.6f}\n")
+                f.write(f"Average PSNR_WM2CO: {psnr_wm2co_mean/total_images:.6f}\n")
+                f.write(f"Average BER: {BER_mean/total_images:.6f}\n")
+                f.write(f"Average ACC: {(1-BER_mean/total_images)*100:.6f}%\n")
+                f.write(f"Average SSIM_WM2CO: {ssim_wm2co_mean/total_images:.6f}\n")
+                f.write(f"Average SSIM_REC2CO: {ssim_rec2co_mean/total_images:.6f}\n")
+                f.write("="*80 + "\n")
+
+            # Print final averages to console
+            print("\n" + "="*80)
+            print("FINAL AVERAGE RESULTS:")
+            print("-"*80)
+            print(f"Total Images Processed: {total_images}")
+            print(f"Average PSNR_NO2CO: {psnr_no2co_mean/total_images:.6f}")
+            print(f"Average PSNR_REC2CO: {psnr_rec2co_mean/total_images:.6f}")
+            print(f"Average PSNR_WM2NO: {psnr_wm2no_mean/total_images:.6f}")
+            print(f"Average PSNR_WM2CO: {psnr_wm2co_mean/total_images:.6f}")
+            print(f"Average BER: {BER_mean/total_images:.6f}")
+            print(f"Average ACC: {(1-BER_mean/total_images)*100:.2f}%")
+            print(f"Average SSIM_WM2CO: {ssim_wm2co_mean/total_images:.6f}")
+            print(f"Average SSIM_REC2CO: {ssim_rec2co_mean/total_images:.6f}")
+            print("="*80)
+
+            # logging mean (console output - for compatibility)
             logging.info('\n\
                             psnr_no2co_mean = {}\n\
                             psnr_rec2co_mean = {}\n\
@@ -347,20 +568,32 @@ class Network(nn.Module):
                             ------------------------\n\
                             ssim_wm2co_mean = {}\n\
                             ssim_rec2co_mean = {}'\
-                    .format(psnr_no2co_mean.item()/test_step, \
-                            psnr_rec2co_mean.item()/test_step, \
-                            psnr_wm2no_mean.item()/test_step, \
-                            psnr_wm2co_mean.item()/test_step, \
+                    .format(psnr_no2co_mean/total_images, \
+                            psnr_rec2co_mean/total_images, \
+                            psnr_wm2no_mean/total_images, \
+                            psnr_wm2co_mean/total_images, \
                             #------------------------
-                            BER_mean/test_step, \
-                            (1-BER_mean/test_step)*100, \
+                            BER_mean/total_images, \
+                            (1-BER_mean/total_images)*100, \
                             #------------------------
-                            ssim_wm2co_mean/test_step, \
-                            ssim_rec2co_mean/test_step))
+                            ssim_wm2co_mean/total_images, \
+                            ssim_rec2co_mean/total_images))
+        
         # test 1 epoch
         logging.info('--------------------------------------------------------\n')
-        logging.info('Test end !')
-
+        logging.info(f'Test end! Individual results saved to: {log_file}')
+        
+        return {
+            'psnr_wm2co': psnr_wm2co_mean/total_images,
+            'psnr_no2co': psnr_no2co_mean/total_images,
+            'psnr_rec2co': psnr_rec2co_mean/total_images,
+            'psnr_wm2no': psnr_wm2no_mean/total_images,
+            'ber': BER_mean/total_images,
+            'acc': (1-BER_mean/total_images)*100,
+            'ssim_wm2co': ssim_wm2co_mean/total_images,
+            'ssim_rec2co': ssim_rec2co_mean/total_images,
+            'total_images': total_images
+        }
 
     def psnr_ssim_acc(self, image, watermarking_img, noised_img, img_fake, msg_fake_1, msg_fake_2, message):
         # psnr
